@@ -1,16 +1,13 @@
 # MSYS2 下载重定向服务
 
-一个简单的 Node.js + Express 服务，自动重定向到最新的 MSYS2 安装程序下载链接。
+一个 Node.js + Express 服务，自动抓取最新的 MSYS2 安装程序下载链接并重定向客户端。
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSkyAerope%2Fmsys2-releases-fetcher)
 
 ## 功能特性
 
-- 🔄 **自动重定向**：直接 302 重定向到最新 MSYS2 下载链接
 - 🏗️ **架构支持**：支持 x86_64 和 ARM64 架构
-- 📦 **智能缓存**：10分钟缓存，减少对源网站的请求
 - 🛡️ **容错机制**：网络失败时使用备用链接
-- 📊 **简单监控**：健康检查和缓存状态查看
 - ☁️ **Vercel 支持**：一键部署到 Vercel
 
 ## 快速开始
@@ -52,17 +49,12 @@ pnpm start
 | `/cn?arch=arm64` | 中国代理 ARM64 版本 | http://localhost:3000/cn?arch=arm64 |
 | `/cn/x64` | 中国代理 x86_64 专用 | http://localhost:3000/cn/x64 |
 | `/cn/arm64` | 中国代理 ARM64 专用 | http://localhost:3000/cn/arm64 |
-| `/cn` | 中国代理加速（默认 x86_64） | http://localhost:3000/cn |
-| `/cn?arch=arm64` | 中国代理 ARM64 版本 | http://localhost:3000/cn?arch=arm64 |
-| `/cn/x64` | 中国代理 x86_64 专用 | http://localhost:3000/cn/x64 |
-| `/cn/arm64` | 中国代理 ARM64 专用 | http://localhost:3000/cn/arm64 |
 
 ## 技术实现
 
 1. **网页抓取**：使用 Axios + Cheerio 从 https://www.msys2.org/ 抓取下载链接
-2. **缓存机制**：10分钟 TTL 缓存，减少对源网站的请求
-3. **容错处理**：网络失败时自动使用硬编码的备用链接
-4. **重定向**：使用 HTTP 302 状态码进行临时重定向
+2. **容错处理**：网络失败时自动使用硬编码的备用链接
+3. **重定向**：使用 HTTP 302 状态码进行临时重定向
 
 ## 项目结构
 
@@ -89,7 +81,7 @@ msys2-releases-fetcher/
 2. 连接你的 GitHub 账号
 3. 点击 "Deploy"
 
-或者使用 Vercel CLI：
+或者clone本仓库后使用 Vercel CLI：
 
 ```bash
 npm i -g vercel
@@ -115,10 +107,10 @@ pm2 save
 ### Docker 部署
 
 ```dockerfile
-FROM node:18-alpine
+FROM node:24-alpine
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install
 COPY . .
 EXPOSE 3000
 CMD ["node", "src/index.js"]
@@ -166,78 +158,9 @@ curl -L http://localhost:3000/cn -o msys2-latest.exe
 wget --content-disposition http://localhost:3000/
 ```
 
-### 场景 3：在 CI/CD 管道中使用
-
-```yaml
-# GitHub Actions 示例
-jobs:
-  setup-msys2:
-    runs-on: windows-latest
-    steps:
-      - name: 下载 MSYS2
-        run: |
-          curl -L http://your-server:3000/ -o msys2-installer.exe
-          ./msys2-installer.exe
-```
-
-## 故障排除
-
-### 常见问题
-
-#### 1. 服务无法启动
-
-```bash
-# 检查端口是否被占用
-netstat -ano | findstr :3000
-
-# 检查 Node.js 版本
-node --version  # 需要 Node.js 20+
-
-# 检查依赖
-pnpm install
-```
-
-#### 2. 重定向失败
-
-```bash
-# 测试网络连接
-curl https://www.msys2.org/
-
-# 测试服务
-curl -I http://localhost:3000/
-
-# 查看服务日志
-# 检查控制台输出
-```
-
-### 环境变量
+## 环境变量
 
 - `PORT` - 服务器端口（默认：3000）
-
-## 测试
-
-### 使用 curl 测试
-
-```bash
-# 测试重定向（会显示重定向目标）
-curl -I http://localhost:3000/
-
-# 测试 ARM64 版本
-curl -I "http://localhost:3000/?arch=arm64"
-
-# 测试中国代理
-curl -I http://localhost:3000/cn
-
-# 跟随重定向下载（Linux/Mac）
-curl -L http://localhost:3000/ -o msys2-installer.exe
-```
-
-### 在浏览器中测试
-
-1. 访问 http://localhost:3000/
-2. 浏览器会自动重定向到最新的 MSYS2 安装程序
-3. 开始下载
-
 
 ## 技术栈
 
