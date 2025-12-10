@@ -36,6 +36,7 @@ pnpm start
 在浏览器中访问：
 - http://localhost:3000/ - 自动下载最新 x86_64 版本
 - http://localhost:3000/arm64 - 自动下载最新 ARM64 版本
+- http://localhost:3000/cn - 中国用户使用代理加速下载
 
 ## API 端点
 
@@ -44,18 +45,17 @@ pnpm start
 | 端点 | 说明 | 示例 |
 |------|------|------|
 | `/` | 重定向到最新 x86_64 版本 | http://localhost:3000/ |
-| `/direct` | 同上 | http://localhost:3000/direct |
 | `/x64` | x86_64 专用路由 | http://localhost:3000/x64 |
 | `/arm64` | ARM64 专用路由 | http://localhost:3000/arm64 |
 | `/?arch=arm64` | 通过参数指定 ARM64 | http://localhost:3000/?arch=arm64 |
-
-### 管理端点
-
-| 端点 | 说明 | 示例 |
-|------|------|------|
-| `/health` | 健康检查 | http://localhost:3000/health |
-| `/cache` | 缓存状态 | http://localhost:3000/cache |
-| `/clear-cache` | 清除缓存 | http://localhost:3000/clear-cache |
+| `/cn` | 中国代理加速（默认 x86_64） | http://localhost:3000/cn |
+| `/cn?arch=arm64` | 中国代理 ARM64 版本 | http://localhost:3000/cn?arch=arm64 |
+| `/cn/x64` | 中国代理 x86_64 专用 | http://localhost:3000/cn/x64 |
+| `/cn/arm64` | 中国代理 ARM64 专用 | http://localhost:3000/cn/arm64 |
+| `/cn` | 中国代理加速（默认 x86_64） | http://localhost:3000/cn |
+| `/cn?arch=arm64` | 中国代理 ARM64 版本 | http://localhost:3000/cn?arch=arm64 |
+| `/cn/x64` | 中国代理 x86_64 专用 | http://localhost:3000/cn/x64 |
+| `/cn/arm64` | 中国代理 ARM64 专用 | http://localhost:3000/cn/arm64 |
 
 ## 技术实现
 
@@ -144,6 +144,8 @@ docker run -p 3000:3000 msys2-redirect
 
 - [x86_64 版本](http://your-server:3000/)
 - [ARM64 版本](http://your-server:3000/arm64)
+- [中国加速 x86_64](http://your-server:3000/cn)
+- [中国加速 ARM64](http://your-server:3000/cn/arm64)
 ```
 
 用户点击链接时，会自动重定向到最新的 GitHub 发布页面。
@@ -156,6 +158,9 @@ curl -L http://localhost:3000/ -o msys2-latest.exe
 
 # 使用 curl 下载最新 ARM64 版本
 curl -L http://localhost:3000/arm64 -o msys2-latest-arm64.exe
+
+# 中国用户使用代理加速下载
+curl -L http://localhost:3000/cn -o msys2-latest.exe
 
 # 使用 wget 下载
 wget --content-disposition http://localhost:3000/
@@ -174,32 +179,6 @@ jobs:
           curl -L http://your-server:3000/ -o msys2-installer.exe
           ./msys2-installer.exe
 ```
-
-## 监控和维护
-
-### 查看日志
-
-```bash
-# 如果使用 PM2
-pm2 logs msys2-redirect
-
-# 直接运行时的日志
-# 在控制台查看实时日志
-```
-
-### 性能监控
-
-服务包含以下监控功能：
-1. **请求日志**：每个请求都会记录时间、方法和路径
-2. **缓存状态**：访问 `/cache` 查看缓存信息
-3. **健康检查**：访问 `/health` 检查服务状态
-
-### 更新服务
-
-当 MSYS2 发布新版本时：
-1. 服务会自动检测新版本（通过缓存机制）
-2. 缓存每10分钟更新一次
-3. 可以手动清除缓存：访问 `/clear-cache`
 
 ## 故障排除
 
@@ -231,16 +210,6 @@ curl -I http://localhost:3000/
 # 检查控制台输出
 ```
 
-#### 3. 获取到旧版本
-
-```bash
-# 清除缓存
-curl http://localhost:3000/clear-cache
-
-# 等待10分钟（缓存TTL）
-# 或重启服务
-```
-
 ### 环境变量
 
 - `PORT` - 服务器端口（默认：3000）
@@ -255,6 +224,9 @@ curl -I http://localhost:3000/
 
 # 测试 ARM64 版本
 curl -I "http://localhost:3000/?arch=arm64"
+
+# 测试中国代理
+curl -I http://localhost:3000/cn
 
 # 跟随重定向下载（Linux/Mac）
 curl -L http://localhost:3000/ -o msys2-installer.exe
@@ -283,5 +255,4 @@ Apache License 2.0 - 详见 LICENSE 文件
 
 如有问题，请：
 1. 查看服务日志
-2. 检查 `/health` 端点
-3. 提交 [GitHub Issues](https://github.com/SkyAerope/msys2-releases-fetcher/issues)
+2. 提交 [GitHub Issues](https://github.com/SkyAerope/msys2-releases-fetcher/issues)

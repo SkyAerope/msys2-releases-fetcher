@@ -98,17 +98,28 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * 直接下载路由 - 无查询参数
+ * 中国代理重定向路由 - 通过 gh-proxy.com 加速下载
  */
-router.get('/direct', async (req, res) => {
+router.get('/cn', async (req, res) => {
   try {
-    console.log('🔗 请求直接下载 (x86_64)');
-    const downloadUrl = await getLatestDownloadUrl('x86_64');
-    console.log(`↪️ 直接重定向到: ${downloadUrl}`);
-    res.redirect(302, downloadUrl);
+    const { arch = 'x86_64' } = req.query;
+    const architecture = arch.toLowerCase() === 'arm64' ? 'arm64' : 'x86_64';
+    
+    console.log(`🔗 请求中国代理重定向到 ${architecture} 版本`);
+    
+    const downloadUrl = await getLatestDownloadUrl(architecture);
+    const proxiedUrl = `https://gh-proxy.com/${downloadUrl}`;
+    
+    // 记录重定向
+    console.log(`↪️ 重定向到代理: ${proxiedUrl}`);
+    
+    // 302 重定向
+    res.redirect(302, proxiedUrl);
+    
   } catch (error) {
-    console.error('❌ 直接下载重定向失败:', error.message);
-    res.redirect(302, getFallbackUrl('x86_64'));
+    console.error('❌ 中国代理重定向失败:', error.message);
+    // 出错时重定向到代理备用链接
+    res.redirect(302, `https://gh-proxy.com/${getFallbackUrl('x86_64')}`);
   }
 });
 
@@ -143,43 +154,35 @@ router.get('/arm64', async (req, res) => {
 });
 
 /**
- * 健康检查路由 - 返回简单文本
+ * 中国代理 x86_64 架构专用路由
  */
-router.get('/health', async (req, res) => {
+router.get('/cn/x64', async (req, res) => {
   try {
-    const health = await scraper.getHealth();
-    res.send(`MSYS2 下载重定向服务 - 状态: ${health.status}\n缓存时间: ${downloadCache.timestamp ? new Date(downloadCache.timestamp).toISOString() : '无'}`);
+    console.log('🔗 请求中国代理 x86_64 版本');
+    const downloadUrl = await getLatestDownloadUrl('x86_64');
+    const proxiedUrl = `https://gh-proxy.com/${downloadUrl}`;
+    console.log(`↪️ 重定向到代理 x86_64: ${proxiedUrl}`);
+    res.redirect(302, proxiedUrl);
   } catch (error) {
-    res.status(500).send(`服务错误: ${error.message}`);
+    console.error('❌ 中国代理 x86_64 重定向失败:', error.message);
+    res.redirect(302, `https://gh-proxy.com/${getFallbackUrl('x86_64')}`);
   }
 });
 
 /**
- * 缓存状态路由
+ * 中国代理 ARM64 架构专用路由
  */
-router.get('/cache', (req, res) => {
-  const now = Date.now();
-  const cacheAge = downloadCache.timestamp ? now - downloadCache.timestamp : null;
-  const isValid = downloadCache.timestamp && cacheAge < downloadCache.ttl;
-  
-  res.send(`缓存状态:
-- x86_64: ${downloadCache.x86_64 ? '有' : '无'}
-- ARM64: ${downloadCache.arm64 ? '有' : '无'}
-- 更新时间: ${downloadCache.timestamp ? new Date(downloadCache.timestamp).toLocaleString() : '无'}
-- 缓存年龄: ${cacheAge ? Math.floor(cacheAge / 1000) + '秒' : '无'}
-- 是否有效: ${isValid ? '是' : '否'}
-- TTL: ${downloadCache.ttl / 1000}秒`);
-});
-
-/**
- * 清除缓存路由
- */
-router.get('/clear-cache', (req, res) => {
-  downloadCache.x86_64 = null;
-  downloadCache.arm64 = null;
-  downloadCache.timestamp = null;
-  
-  res.send('缓存已清除');
+router.get('/cn/arm64', async (req, res) => {
+  try {
+    console.log('🔗 请求中国代理 ARM64 版本');
+    const downloadUrl = await getLatestDownloadUrl('arm64');
+    const proxiedUrl = `https://gh-proxy.com/${downloadUrl}`;
+    console.log(`↪️ 重定向到代理 ARM64: ${proxiedUrl}`);
+    res.redirect(302, proxiedUrl);
+  } catch (error) {
+    console.error('❌ 中国代理 ARM64 重定向失败:', error.message);
+    res.redirect(302, `https://gh-proxy.com/${getFallbackUrl('arm64')}`);
+  }
 });
 
 module.exports = router;
