@@ -1,12 +1,12 @@
 # MSYS2 下载重定向服务
 
-一个 Node.js + Express 服务，自动抓取最新的 MSYS2 安装程序下载链接并重定向客户端。
+一个 Node.js + Express 服务，自动抓取最新的 MSYS2 安装程序下载链接并重定向客户端到它。
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSkyAerope%2Fmsys2-releases-fetcher)
 
 ## 功能特性
 
-- 🏗️ **架构支持**：支持 x86_64 和 ARM64 架构
+- 🏗️ **架构支持**：支持获取 x86_64 或 ARM64 架构的链接
 - 🛡️ **容错机制**：网络失败时使用备用链接
 - ☁️ **Vercel 支持**：一键部署到 Vercel
 
